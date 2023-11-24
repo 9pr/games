@@ -221,6 +221,9 @@
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
+
+		<script src="https://game.9pr.ru/socket.io/socket.io.js"></script>
+
 		<script>
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
@@ -285,6 +288,23 @@
 
 				fillField(element) {
 					element.innerHTML = this.field;
+					return this;
+				}
+
+				shuffleTd () {
+					for (let i = this.colors.length -1 ; i > 0; i--) {
+						let j = Math.floor(Math.random() * (i + 1));
+						[this.colors[i], this.colors[j]] =
+						[this.colors[j], this.colors[i]];
+					}
+					return this;
+				}
+
+				updateField (tds) {
+					for (let i = 0; i < this.colors.length; i++) {
+						tds[i].style.backgroundColor = this.colors[i];
+					}
+					return this;
 				}
 			}
 
@@ -315,7 +335,82 @@
 				}
 				document.querySelector('#game_matrix #round').innerHTML = `Раунд ${sessionStorage.getItem('game_matrix_round')}`;
 
-				gameMatrix.generateColors(colors).setFindColor(document.querySelector('#game_matrix #find')).generateField().fillField(document.querySelector('#game_matrix #field'));
+				gameMatrix.generateColors(colors).setFindColor(document.querySelector('#game_matrix #find')).shuffleTd().generateField().fillField(document.querySelector('#game_matrix #field'));
+
+				document.querySelector('#game_matrix #start').onclick = () => {
+					if (document.querySelector('#game_matrix #name').value.trim() == '') {
+						return alert('Введите Ваше имя');
+					}
+					let timeScore = 0;
+					const scoreCount = (e) => {
+						if (gameMatrix.find === e.target.style.backgroundColor) {
+							console.log(timeScore);
+							sessionStorage.setItem('game_matrix_score',
+							+sessionStorage.getItem('game_matrix_score') + 1200 + timeScore
+							);
+						} else {
+							console.log(timeScore);
+							sessionStorage.setItem('game_matrix_score',
+								+sessionStorage.getItem('game_matrix_score') - 1200 - 800 + timeScore
+							);
+						}
+						document.querySelector('#game_matrix #score').innerHTML = `Результат<br>${sessionStorage.getItem('game_matrix_score')} баллов`;
+					}
+					socket = io("http://game.9pr.ru/matrix");
+					if (sessionStorage.getItem('game_matrix_score') == null) {
+						sessionStorage.setItem('game_matrix_score', 0);
+					}
+					document.querySelector('#game_matrix #score').innerHTML = `
+						Результат <br> ${sessionStorage.getItem('game_matrix_score')} баллов
+					`;
+					const timeRound = [0, 5, 5, 5];
+					let timeRemaind = timeRound[sessionStorage.getItem('game_matrix_round')] * 1000;
+					document.querySelector('#game_matrix #time').innerHTML = `
+						Ост. время <br> ${timeRound[sessionStorage.getItem('game_matrix_round')]}с.
+					`;
+					
+					let interval = setInterval(
+						() => {
+							timeScore = 800;
+							if (timeRemaind <= 0) {
+								clearInterval(interval);
+							} else {
+								gameMatrix.shuffleTd().updateField(document.querySelectorAll('#game_matrix #field td'));
+							}
+
+						}, 800
+					);
+					let time = setInterval (() => {
+						timeRemaind -= 10;
+						timeScore -= 10;
+						if (timeRemaind <= 0) {
+							clearInterval(time);
+							document.querySelector('#game_matrix table').removeEventListener('click', scoreCount);
+							document.querySelector('#game_matrix #start').style.display = 'block';
+							document.querySelector('#game_matrix #time').innerHTML = '';
+							if (sessionStorage.getItem('game_matrix_round') < 3) {
+								sessionStorage.setItem('game_matrix_round', +sessionStorage.getItem('game_matrix_round')+1);
+							} else {
+								sessionStorage.setItem('game_matrix_round', 1);
+								socket.emit('sendScore', {
+									name: document.querySelector('#game_matrix #name').value.trim(),
+									score: sessionStorage.getItem('game_matrix_score'),
+								});
+								sessionStorage.setItem('game_matrix_score', 0);
+							}
+							document.querySelector('#game_matrix #round').innerHTML = 'Раунд' + sessionStorage.getItem('game_matrix_round');
+						} else {
+							document.querySelector('#game_matrix #start').style.display = 'none';
+							document.querySelector('#game_matrix #time').innerHTML = `
+							Ост.время <br> ${timeRemaind/1000}c`;
+						}
+					}, 10);
+
+					if (sessionStorage.getItem('game_matrix_round') == 1) {
+						sessionStorage.setItem('game_matrix_score', 0);
+					}
+					document.querySelector('#game_matrix table').addEventListener('click', scoreCount);
+				}
 			}
 		</script>
 	</body>
