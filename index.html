@@ -103,7 +103,7 @@
 				
 				<section data-markdown>
 					<script type="text/template">
-						Игра - занятие, обусловленное совокупностью опредлденных правил, приемов и служащее для заполнения досуга, развлечения.
+						Игра - занятие, обусловленное совокупностью определённых правил, приемов и служащее для заполнения досуга, развлечения.
 					</script>
 				</section>
 				
@@ -116,7 +116,7 @@
 				<section data-markdown>
 					<script type="text/template">
 						### Компьютерная игра
-						1. Взаимодействие по определённому алгоритму (с целью развлечения, обучения, или тренировки) человека (группы людей) с компьютером или группы людей друг с другом посредством компьютера.
+						1. Взаимодействие по определённому алгоритму (с целью развлечения, обучения, или тренировки) человека (группы людей) с компьютером, или группы людей друг с другом посредством компьютера.
 					</script>
 				</section>
 				
@@ -537,7 +537,7 @@
 					document.querySelector('#game_matrix #score').innerHTML = `
 						Результат <br> ${sessionStorage.getItem('game_matrix_score')} баллов
 					`;
-					const timeRound = [0, 5, 5, 5];
+					const timeRound = [0, 5, 15, 45];
 					let timeRemaind = timeRound[sessionStorage.getItem('game_matrix_round')] * 1000;
 					document.querySelector('#game_matrix #time').innerHTML = `
 						Ост. время <br> ${timeRound[sessionStorage.getItem('game_matrix_round')]}с.
